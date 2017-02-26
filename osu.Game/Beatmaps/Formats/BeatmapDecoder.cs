@@ -1,11 +1,13 @@
-﻿//Copyright (c) 2007-2016 ppy Pty Ltd <contact@ppy.sh>.
-//Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
+﻿// Copyright (c) 2007-2017 ppy Pty Ltd <contact@ppy.sh>.
+// Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
 
 using System;
 using System.Collections.Generic;
 using System.IO;
 using osu.Game.Modes.Objects;
 using OpenTK.Graphics;
+using osu.Game.Beatmaps.Timing;
+using osu.Game.Database;
 
 namespace osu.Game.Beatmaps.Formats
 {
@@ -33,6 +35,11 @@ namespace osu.Game.Beatmaps.Formats
             return b;
         }
 
+        public virtual void Decode(TextReader stream, Beatmap beatmap)
+        {
+            ParseFile(stream, beatmap);
+        }
+
         public virtual Beatmap Process(Beatmap beatmap)
         {
             ApplyColours(beatmap);
@@ -40,15 +47,31 @@ namespace osu.Game.Beatmaps.Formats
             return beatmap;
         }
 
-        protected abstract Beatmap ParseFile(TextReader stream);
+        protected virtual Beatmap ParseFile(TextReader stream)
+        {
+            var beatmap = new Beatmap
+            {
+                HitObjects = new List<HitObject>(),
+                ControlPoints = new List<ControlPoint>(),
+                ComboColors = new List<Color4>(),
+                BeatmapInfo = new BeatmapInfo
+                {
+                    Metadata = new BeatmapMetadata(),
+                    BaseDifficulty = new BaseDifficulty(),
+                },
+            };
+            ParseFile(stream, beatmap);
+            return beatmap;
+        }
+        protected abstract void ParseFile(TextReader stream, Beatmap beatmap);
 
         public virtual void ApplyColours(Beatmap b)
         {
-            List<Color4> colours = b.ComboColors ?? new List<Color4>() {
+            List<Color4> colours = b.ComboColors ?? new List<Color4> {
                 new Color4(17, 136, 170, 255),
-                new Color4(102,136,0, 255),
-                new Color4(204,102,0, 255),
-                new Color4(121,9,13, 255),
+                new Color4(102, 136, 0, 255),
+                new Color4(204, 102, 0, 255),
+                new Color4(121, 9, 13, 255),
             };
 
             if (colours.Count == 0) return;

@@ -1,5 +1,5 @@
-﻿//Copyright (c) 2007-2016 ppy Pty Ltd <contact@ppy.sh>.
-//Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
+﻿// Copyright (c) 2007-2017 ppy Pty Ltd <contact@ppy.sh>.
+// Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
 
 using osu.Framework;
 using osu.Framework.Graphics;
@@ -8,6 +8,7 @@ using osu.Framework.Graphics.Transformations;
 using osu.Framework.Input;
 using OpenTK;
 using OpenTK.Graphics;
+using osu.Game.Graphics;
 
 namespace osu.Game.Beatmaps.Drawables
 {
@@ -37,6 +38,8 @@ namespace osu.Game.Beatmaps.Drawables
                 CornerRadius = 10,
                 BorderColour = new Color4(221, 255, 255, 255),
             });
+
+            Alpha = 0;
         }
 
         public void SetMultiplicativeAlpha(float alpha)
@@ -47,13 +50,14 @@ namespace osu.Game.Beatmaps.Drawables
         protected override void LoadComplete()
         {
             base.LoadComplete();
-            applyState();
+            ApplyState();
         }
 
-        private void applyState()
+        protected virtual void ApplyState(PanelSelectedState last = PanelSelectedState.Hidden)
         {
             switch (state)
             {
+                case PanelSelectedState.Hidden:
                 case PanelSelectedState.NotSelected:
                     Deselected();
                     break;
@@ -61,6 +65,11 @@ namespace osu.Game.Beatmaps.Drawables
                     Selected();
                     break;
             }
+
+            if (state == PanelSelectedState.Hidden)
+                FadeOut(300, EasingTypes.OutQuint);
+            else
+                FadeIn(250);
         }
 
         private PanelSelectedState state = PanelSelectedState.NotSelected;
@@ -72,9 +81,10 @@ namespace osu.Game.Beatmaps.Drawables
             set
             {
                 if (state == value) return;
-                state = value;
 
-                applyState();
+                var last = state;
+                state = value;
+                ApplyState(last);
             }
         }
 
@@ -98,7 +108,7 @@ namespace osu.Game.Beatmaps.Drawables
                 Type = EdgeEffectType.Shadow,
                 Offset = new Vector2(1),
                 Radius = 10,
-                Colour = new Color4(0, 0, 0, 100),
+                Colour = Color4.Black.Opacity(100),
             };
         }
 
@@ -111,6 +121,7 @@ namespace osu.Game.Beatmaps.Drawables
 
     enum PanelSelectedState
     {
+        Hidden,
         NotSelected,
         Selected
     }

@@ -1,21 +1,16 @@
-﻿//Copyright (c) 2007-2016 ppy Pty Ltd <contact@ppy.sh>.
-//Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
+﻿// Copyright (c) 2007-2017 ppy Pty Ltd <contact@ppy.sh>.
+// Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Graphics.Textures;
-using osu.Game.Configuration;
 using osu.Game.Online.API;
 using OpenTK;
 using OpenTK.Graphics;
+using osu.Game.Graphics;
 
 namespace osu.Game.Overlays.Toolbar
 {
@@ -25,6 +20,8 @@ namespace osu.Game.Overlays.Toolbar
 
         public ToolbarUserButton()
         {
+            AutoSizeAxes = Axes.X;
+
             DrawableText.Font = @"Exo2.0-MediumItalic";
 
             Add(new OpaqueBackground { Depth = 1 });
@@ -33,7 +30,7 @@ namespace osu.Game.Overlays.Toolbar
         }
 
         [BackgroundDependencyLoader]
-        private void load(APIAccess api, OsuConfigManager config)
+        private void load(APIAccess api)
         {
             api.Register(this);
         }
@@ -73,7 +70,7 @@ namespace osu.Game.Overlays.Toolbar
                 {
                     Type = EdgeEffectType.Shadow,
                     Radius = 4,
-                    Colour = new Color4(0, 0, 0, 0.1f),
+                    Colour = Color4.Black.Opacity(0.1f),
                 };
 
                 Masking = true;
@@ -84,7 +81,7 @@ namespace osu.Game.Overlays.Toolbar
             {
                 this.game = game;
 
-                guestTexture = textures.Get(@"Online/avatar-guest@2x");
+                guestTexture = textures.Get(@"Online/avatar-guest");
             }
 
             public int UserId
@@ -105,7 +102,7 @@ namespace osu.Game.Overlays.Toolbar
 
                     newSprite.FillMode = FillMode.Fit;
 
-                    newSprite.Preload(game, s =>
+                    newSprite.LoadAsync(game, s =>
                     {
                         Sprite?.FadeOut();
                         Sprite?.Expire();
@@ -123,7 +120,6 @@ namespace osu.Game.Overlays.Toolbar
             public class OnlineSprite : Sprite
             {
                 private readonly string url;
-                private readonly int userId;
 
                 public OnlineSprite(string url)
                 {

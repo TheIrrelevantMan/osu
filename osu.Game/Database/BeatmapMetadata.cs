@@ -1,5 +1,5 @@
-﻿//Copyright (c) 2007-2016 ppy Pty Ltd <contact@ppy.sh>.
-//Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
+﻿// Copyright (c) 2007-2017 ppy Pty Ltd <contact@ppy.sh>.
+// Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
 
 using SQLite.Net.Attributes;
 
@@ -9,8 +9,9 @@ namespace osu.Game.Database
     {
         [PrimaryKey, AutoIncrement]
         public int ID { get; set; }
-        
-        public int BeatmapSetID { get; set; }
+
+        public int? OnlineBeatmapSetID { get; set; } = null;
+
         public string Title { get; set; }
         public string TitleUnicode { get; set; }
         public string Artist { get; set; }

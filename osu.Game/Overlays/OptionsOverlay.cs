@@ -1,50 +1,48 @@
-﻿//Copyright (c) 2007-2016 ppy Pty Ltd <contact@ppy.sh>.
-//Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
+﻿// Copyright (c) 2007-2017 ppy Pty Ltd <contact@ppy.sh>.
+// Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
 
-using System.Diagnostics;
 using System.Linq;
-using OpenTK;
 using OpenTK.Graphics;
-using OpenTK.Input;
-using osu.Framework;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Primitives;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Graphics.Transformations;
-using osu.Framework.Input;
-using osu.Game.Configuration;
 using osu.Game.Overlays.Options;
-using osu.Game.Overlays.Options.Audio;
-using osu.Game.Overlays.Options.Gameplay;
-using osu.Game.Overlays.Options.General;
-using osu.Game.Overlays.Options.Graphics;
-using osu.Game.Overlays.Options.Input;
-using osu.Game.Overlays.Options.Online;
 using System;
+using osu.Game.Graphics;
+using osu.Game.Graphics.Sprites;
+using osu.Game.Overlays.Options.Sections;
 
 namespace osu.Game.Overlays
 {
-    public class OptionsOverlay : OverlayContainer
+    public class OptionsOverlay : FocusedOverlayContainer
     {
         internal const float CONTENT_MARGINS = 10;
 
         public const float TRANSITION_LENGTH = 600;
 
-        public const float SIDEBAR_WIDTH = OptionsSidebar.default_width;
+        public const float SIDEBAR_WIDTH = Sidebar.DEFAULT_WIDTH;
 
         private const float width = 400;
         
         private const float sidebar_padding = 10;
 
         private ScrollContainer scrollContainer;
-        private OptionsSidebar sidebar;
+        private Sidebar sidebar;
         private SidebarButton[] sidebarButtons;
         private OptionsSection[] sections;
         private float lastKnownScroll;
 
         public OptionsOverlay()
+        {
+            RelativeSizeAxes = Axes.Y;
+            AutoSizeAxes = Axes.X;
+        }
+
+        [BackgroundDependencyLoader(permitNulls: true)]
+        private void load(OsuGame game, OsuColour colours)
         {
             sections = new OptionsSection[]
             {
@@ -58,10 +56,6 @@ namespace osu.Game.Overlays
                 new OnlineSection(),
                 new MaintenanceSection(),
             };
-
-            RelativeSizeAxes = Axes.Y;
-            AutoSizeAxes = Axes.X;
-
             Children = new Drawable[]
             {
                 new Box
@@ -82,19 +76,19 @@ namespace osu.Game.Overlays
                         {
                             AutoSizeAxes = Axes.Y,
                             RelativeSizeAxes = Axes.X,
-                            Direction = FlowDirection.VerticalOnly,
+                            Direction = FlowDirections.Vertical,
 
                             Children = new Drawable[]
                             {
-                                new SpriteText
+                                new OsuSpriteText
                                 {
                                     Text = "settings",
                                     TextSize = 40,
-                                    Margin = new MarginPadding { Left = CONTENT_MARGINS, Top = 30 },
+                                    Margin = new MarginPadding { Left = CONTENT_MARGINS, Top = Toolbar.Toolbar.TOOLTIP_HEIGHT },
                                 },
-                                new SpriteText
+                                new OsuSpriteText
                                 {
-                                    Colour = new Color4(255, 102, 170, 255),
+                                    Colour = colours.Pink,
                                     Text = "Change the way osu! behaves",
                                     TextSize = 18,
                                     Margin = new MarginPadding { Left = CONTENT_MARGINS, Bottom = 30 },
@@ -103,14 +97,14 @@ namespace osu.Game.Overlays
                                 {
                                     AutoSizeAxes = Axes.Y,
                                     RelativeSizeAxes = Axes.X,
-                                    Direction = FlowDirection.VerticalOnly,
+                                    Direction = FlowDirections.Vertical,
                                     Children = sections,
                                 }
                             }
                         }
                     }
                 },
-                sidebar = new OptionsSidebar
+                sidebar = new Sidebar
                 {
                     Width = SIDEBAR_WIDTH,
                     Children = sidebarButtons = sections.Select(section =>
@@ -123,11 +117,7 @@ namespace osu.Game.Overlays
                     ).ToArray()
                 }
             };
-        }
-
-        [BackgroundDependencyLoader(permitNulls: true)]
-        private void load(OsuGame game)
-        {
+        
             scrollContainer.Padding = new MarginPadding { Top = game?.Toolbar.DrawHeight ?? 0 };
         }
 
@@ -145,7 +135,7 @@ namespace osu.Game.Overlays
 
                 foreach (OptionsSection section in sections)
                 {
-                    float distance = Math.Abs(scrollContainer.GetChildYInContent(section) - currentScroll);
+                    float distance = Math.Abs(scrollContainer.GetChildPosInContent(section) - currentScroll);
                     if (distance < bestDistance)
                     {
                         bestDistance = distance;
@@ -163,22 +153,10 @@ namespace osu.Game.Overlays
             }
         }
 
-        protected override bool OnMouseDown(InputState state, MouseDownEventArgs args) => true;
-
-        protected override bool OnKeyDown(InputState state, KeyDownEventArgs args)
-        {
-            switch (args.Key)
-            {
-                case Key.Escape:
-                    if (State == Visibility.Hidden) return false;
-                    Hide();
-                    return true;
-            }
-            return base.OnKeyDown(state, args);
-        }
-
         protected override void PopIn()
         {
+            base.PopIn();
+
             scrollContainer.MoveToX(0, TRANSITION_LENGTH, EasingTypes.OutQuint);
             sidebar.MoveToX(0, TRANSITION_LENGTH, EasingTypes.OutQuint);
             FadeTo(1, TRANSITION_LENGTH / 2);
@@ -186,6 +164,8 @@ namespace osu.Game.Overlays
 
         protected override void PopOut()
         {
+            base.PopOut();
+
             scrollContainer.MoveToX(-width, TRANSITION_LENGTH, EasingTypes.OutQuint);
             sidebar.MoveToX(-SIDEBAR_WIDTH, TRANSITION_LENGTH, EasingTypes.OutQuint);
             FadeTo(0, TRANSITION_LENGTH / 2);

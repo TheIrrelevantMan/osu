@@ -1,5 +1,5 @@
-﻿//Copyright (c) 2007-2016 ppy Pty Ltd <contact@ppy.sh>.
-//Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
+﻿// Copyright (c) 2007-2017 ppy Pty Ltd <contact@ppy.sh>.
+// Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
 
 using System;
 using System.IO;
@@ -11,14 +11,22 @@ using osu.Game.Database;
 
 namespace osu.Game.Beatmaps
 {
-    public class WorkingBeatmap : IDisposable
+    public abstract class WorkingBeatmap : IDisposable
     {
         public readonly BeatmapInfo BeatmapInfo;
 
         public readonly BeatmapSetInfo BeatmapSetInfo;
-        private readonly BeatmapDatabase database;
 
-        private ArchiveReader GetReader() => database?.GetReader(BeatmapSetInfo);
+        public readonly bool WithStoryboard;
+
+        protected abstract ArchiveReader GetReader();
+
+        protected WorkingBeatmap(BeatmapInfo beatmapInfo, BeatmapSetInfo beatmapSetInfo, bool withStoryboard = false)
+        {
+            BeatmapInfo = beatmapInfo;
+            BeatmapSetInfo = beatmapSetInfo;
+            WithStoryboard = withStoryboard;
+        }
 
         private Texture background;
         private object backgroundLock = new object();
@@ -29,6 +37,8 @@ namespace osu.Game.Beatmaps
                 lock (backgroundLock)
                 {
                     if (background != null) return background;
+
+                    if (BeatmapInfo?.Metadata?.BackgroundFile == null) return null;
 
                     try
                     {
@@ -56,8 +66,18 @@ namespace osu.Game.Beatmaps
                     try
                     {
                         using (var reader = GetReader())
-                        using (var stream = new StreamReader(reader.GetStream(BeatmapInfo.Path)))
-                            beatmap = BeatmapDecoder.GetDecoder(stream)?.Decode(stream);
+                        {
+                            BeatmapDecoder decoder;
+                            using (var stream = new StreamReader(reader.GetStream(BeatmapInfo.Path)))
+                            {
+                                decoder = BeatmapDecoder.GetDecoder(stream);
+                                beatmap = decoder?.Decode(stream);
+                            }
+
+                            if (WithStoryboard && beatmap != null && BeatmapSetInfo.StoryboardFile != null)
+                                using (var stream = new StreamReader(reader.GetStream(BeatmapSetInfo.StoryboardFile)))
+                                    decoder?.Decode(stream, beatmap);
+                        }
                     }
                     catch { }
 
@@ -67,9 +87,10 @@ namespace osu.Game.Beatmaps
             set { lock (beatmapLock) beatmap = value; }
         }
 
-        private AudioTrack track;
+        private ArchiveReader trackReader;
+        private Track track;
         private object trackLock = new object();
-        public AudioTrack Track
+        public Track Track
         {
             get
             {
@@ -79,12 +100,11 @@ namespace osu.Game.Beatmaps
 
                     try
                     {
-                        using (var reader = GetReader())
-                        {
-                            var trackData = reader?.GetStream(BeatmapInfo.Metadata.AudioFile);
-                            if (trackData != null)
-                                track = new AudioTrackBass(trackData);
-                        }
+                        //store a reference to the reader as we may continue accessing the stream in the background.
+                        trackReader = GetReader();
+                        var trackData = trackReader?.GetStream(BeatmapInfo.Metadata.AudioFile);
+                        if (trackData != null)
+                            track = new TrackBass(trackData);
                     }
                     catch { }
 
@@ -95,18 +115,6 @@ namespace osu.Game.Beatmaps
         }
 
         public bool TrackLoaded => track != null;
-
-        public WorkingBeatmap(Beatmap beatmap)
-        {
-            this.beatmap = beatmap;
-        }
-
-        public WorkingBeatmap(BeatmapInfo beatmapInfo, BeatmapSetInfo beatmapSetInfo, BeatmapDatabase database)
-        {
-            this.BeatmapInfo = beatmapInfo;
-            this.BeatmapSetInfo = beatmapSetInfo;
-            this.database = database;
-        }
 
         private bool isDisposed;
 

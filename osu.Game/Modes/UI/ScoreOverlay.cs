@@ -1,11 +1,14 @@
-﻿//Copyright (c) 2007-2016 ppy Pty Ltd <contact@ppy.sh>.
-//Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
+﻿// Copyright (c) 2007-2017 ppy Pty Ltd <contact@ppy.sh>.
+// Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
 
 using System;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Game.Graphics.UserInterface;
 using osu.Game.Modes.Objects;
+using OpenTK;
+using osu.Framework.Graphics.Primitives;
+using osu.Game.Screens.Play;
 
 namespace osu.Game.Modes.UI
 {
@@ -15,12 +18,19 @@ namespace osu.Game.Modes.UI
         public ComboCounter ComboCounter;
         public ScoreCounter ScoreCounter;
         public PercentageCounter AccuracyCounter;
+        public HealthDisplay HealthDisplay;
         public Score Score { get; set; }
 
         protected abstract KeyCounterCollection CreateKeyCounter();
         protected abstract ComboCounter CreateComboCounter();
         protected abstract PercentageCounter CreateAccuracyCounter();
         protected abstract ScoreCounter CreateScoreCounter();
+        protected virtual HealthDisplay CreateHealthDisplay() => new HealthDisplay
+        {
+            Size = new Vector2(1, 5),
+            RelativeSizeAxes = Axes.X,
+            Margin = new MarginPadding { Top = 20 }
+        };
 
         public virtual void OnHit(HitObject h)
         {
@@ -44,6 +54,7 @@ namespace osu.Game.Modes.UI
                 ComboCounter = CreateComboCounter(),
                 ScoreCounter = CreateScoreCounter(),
                 AccuracyCounter = CreateAccuracyCounter(),
+                HealthDisplay = CreateHealthDisplay(),
             };
         }
 
@@ -53,6 +64,7 @@ namespace osu.Game.Modes.UI
             processor.TotalScore.ValueChanged += delegate { ScoreCounter?.Set((ulong)processor.TotalScore.Value); };
             processor.Accuracy.ValueChanged += delegate { AccuracyCounter?.Set((float)processor.Accuracy.Value); };
             processor.Combo.ValueChanged += delegate { ComboCounter?.Set((ulong)processor.Combo.Value); };
+            HealthDisplay?.Current.Weld(processor.Health);
         }
     }
 }

@@ -1,23 +1,27 @@
-﻿//Copyright (c) 2007-2016 ppy Pty Ltd <contact@ppy.sh>.
-//Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
+﻿// Copyright (c) 2007-2017 ppy Pty Ltd <contact@ppy.sh>.
+// Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
 
 using System;
 using System.Linq;
 using osu.Game.Beatmaps.Samples;
 using osu.Game.Modes;
-using osu.Game.Screens.Play;
 using SQLite.Net.Attributes;
 using SQLiteNetExtensions.Attributes;
+using osu.Game.Beatmaps;
 
 namespace osu.Game.Database
 {
     public class BeatmapInfo : IEquatable<BeatmapInfo>
     {
-        [PrimaryKey]
-        public int BeatmapID { get; set; }
+        [PrimaryKey, AutoIncrement]
+        public int ID { get; set; }
+
+        public int? OnlineBeatmapID { get; set; } = null;
+
+        public int? OnlineBeatmapSetID { get; set; } = null;
 
         [ForeignKey(typeof(BeatmapSetInfo))]
-        public int BeatmapSetID { get; set; }
+        public int BeatmapSetInfoID { get; set; }
 
         [ManyToOne]
         public BeatmapSetInfo BeatmapSet { get; set; }
@@ -69,9 +73,20 @@ namespace osu.Game.Database
         // Metadata
         public string Version { get; set; }
 
+        private float starDifficulty = -1;
+        public float StarDifficulty
+        {
+            get
+            {
+                return (starDifficulty < 0) ? (BaseDifficulty?.OverallDifficulty ?? 5) : starDifficulty;
+            }
+            
+            set { starDifficulty = value; }
+        }
+
         public bool Equals(BeatmapInfo other)
         {
-            return BeatmapID == other?.BeatmapID;
+            return ID == other?.ID;
         }
 
         public bool AudioEquals(BeatmapInfo other) => other != null &&

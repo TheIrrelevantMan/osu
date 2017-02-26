@@ -1,15 +1,11 @@
-﻿//Copyright (c) 2007-2016 ppy Pty Ltd <contact@ppy.sh>.
-//Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
+﻿// Copyright (c) 2007-2017 ppy Pty Ltd <contact@ppy.sh>.
+// Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
 
 using System;
 using System.IO;
-using System.Linq;
 using osu.Desktop.Beatmaps.IO;
-using osu.Framework;
 using osu.Framework.Desktop;
 using osu.Framework.Desktop.Platform;
-using osu.Framework.Platform;
-using osu.Game;
 using osu.Game.IPC;
 using osu.Game.Modes;
 using osu.Game.Modes.Catch;
@@ -26,16 +22,22 @@ namespace osu.Desktop
         {
             LegacyFilesystemReader.Register();
 
+            // Back up the cwd before DesktopGameHost changes it
+            var cwd = Environment.CurrentDirectory;
+
             using (DesktopGameHost host = Host.GetSuitableHost(@"osu", true))
             {
                 if (!host.IsPrimaryInstance)
                 {
                     var importer = new BeatmapImporter(host);
-
+                    // Restore the cwd so relative paths given at the command line work correctly
+                    Directory.SetCurrentDirectory(cwd);
                     foreach (var file in args)
-                        if (!importer.Import(file).Wait(1000))
+                    {
+                        Console.WriteLine(@"Importing {0}", file);
+                        if (!importer.ImportAsync(Path.GetFullPath(file)).Wait(3000))
                             throw new TimeoutException(@"IPC took too long to send");
-                    Console.WriteLine(@"Sent import requests to running instance");
+                    }
                 }
                 else
                 {
@@ -44,8 +46,7 @@ namespace osu.Desktop
                     Ruleset.Register(new ManiaRuleset());
                     Ruleset.Register(new CatchRuleset());
 
-                    BaseGame osu = new OsuGame(args);
-                    host.Add(osu);
+                    host.Add(new OsuGameDesktop(args));
                     host.Run();
                 }
                 return 0;

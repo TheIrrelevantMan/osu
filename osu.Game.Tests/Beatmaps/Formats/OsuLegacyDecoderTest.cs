@@ -1,15 +1,15 @@
-﻿using System;
+﻿// Copyright (c) 2007-2017 ppy Pty Ltd <contact@ppy.sh>.
+// Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
+
 using System.IO;
 using NUnit.Framework;
 using OpenTK;
 using OpenTK.Graphics;
-using osu.Game.Beatmaps;
 using osu.Game.Beatmaps.Formats;
 using osu.Game.Beatmaps.Samples;
 using osu.Game.Modes;
 using osu.Game.Modes.Osu;
 using osu.Game.Modes.Osu.Objects;
-using osu.Game.Screens.Play;
 using osu.Game.Tests.Resources;
 
 namespace osu.Game.Tests.Beatmaps.Formats
@@ -23,7 +23,8 @@ namespace osu.Game.Tests.Beatmaps.Formats
             OsuLegacyDecoder.Register();
             Ruleset.Register(new OsuRuleset());
         }
-        [Test]
+
+        [Test]
         public void TestDecodeMetadata()
         {
             var decoder = new OsuLegacyDecoder();
@@ -31,7 +32,7 @@ namespace osu.Game.Tests.Beatmaps.Formats
             {
                 var beatmap = decoder.Decode(new StreamReader(stream));
                 var meta = beatmap.BeatmapInfo.Metadata;
-                Assert.AreEqual(241526, meta.BeatmapSetID);
+                Assert.AreEqual(241526, meta.OnlineBeatmapSetID);
                 Assert.AreEqual("Soleily", meta.Artist);
                 Assert.AreEqual("Soleily", meta.ArtistUnicode);
                 Assert.AreEqual("03. Renatus - Soleily 192kbps.mp3", meta.AudioFile);
@@ -125,7 +126,8 @@ namespace osu.Game.Tests.Beatmaps.Formats
             }
         }
 
-        [Test]        public void TestDecodeHitObjects()
+        [Test]
+        public void TestDecodeHitObjects()
         {
             var decoder = new OsuLegacyDecoder();
             using (var stream = Resource.OpenResource("Soleily - Renatus (Gamu) [Insane].osu"))

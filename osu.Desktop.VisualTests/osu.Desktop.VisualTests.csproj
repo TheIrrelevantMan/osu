@@ -59,6 +59,7 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <Prefer32Bit>false</Prefer32Bit>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -73,6 +74,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
     <Win32Resource>
@@ -100,13 +102,12 @@
     <Reference Include="OpenTK">
       <HintPath>$(SolutionDir)\packages\ppy.OpenTK.2.0.50727.1339\lib\net45\OpenTK.dll</HintPath>
     </Reference>
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\osu.licenseheader">
       <Link>osu.licenseheader</Link>
     </None>
+    <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="OpenTK.dll.config" />
   </ItemGroup>
@@ -150,7 +151,7 @@
       <Project>{d9a367c9-4c1a-489f-9b05-a0cea2b53b58}</Project>
       <Name>osu.Game.Resources</Name>
     </ProjectReference>
-    <ProjectReference Include="..\osu.Game.Mode.Osu\osu.Game.Modes.Osu.csproj">
+    <ProjectReference Include="..\osu.Game.Modes.Osu\osu.Game.Modes.Osu.csproj">
       <Project>{c92a607b-1fdd-4954-9f92-03ff547d9080}</Project>
       <Name>osu.Game.Modes.Osu</Name>
     </ProjectReference>
@@ -172,10 +173,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Benchmark.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Tests\TestCaseChatDisplay.cs" />
     <Compile Include="Tests\TestCaseGamefield.cs" />
     <Compile Include="Tests\TestCaseMusicController.cs" />
+    <Compile Include="Tests\TestCaseNotificationManager.cs" />
     <Compile Include="Tests\TestCasePlayer.cs" />
     <Compile Include="Tests\TestCaseHitObjects.cs" />
     <Compile Include="Tests\TestCaseKeyCounter.cs" />
@@ -183,9 +186,11 @@
     <Compile Include="Tests\TestCaseScoreCounter.cs" />
     <Compile Include="Tests\TestCaseTextAwesome.cs" />
     <Compile Include="Tests\TestCasePlaySongSelect.cs" />
+    <Compile Include="Tests\TestCaseTwoLayerButton.cs" />
     <Compile Include="VisualTestGame.cs" />
     <Compile Include="Platform\TestStorage.cs" />
     <Compile Include="Tests\TestCaseOptions.cs" />
+    <Compile Include="Tests\TestCasePauseOverlay.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup />

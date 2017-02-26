@@ -1,5 +1,5 @@
-﻿//Copyright (c) 2007-2016 ppy Pty Ltd <contact@ppy.sh>.
-//Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
+﻿// Copyright (c) 2007-2017 ppy Pty Ltd <contact@ppy.sh>.
+// Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu/master/LICENCE
 
 using System;
 using osu.Framework.Allocation;
@@ -13,6 +13,7 @@ using osu.Framework.Graphics.Transformations;
 using osu.Framework.Input;
 using osu.Game.Graphics;
 using osu.Game.Graphics.Backgrounds;
+using osu.Game.Graphics.Sprites;
 using OpenTK;
 using OpenTK.Graphics;
 
@@ -20,6 +21,8 @@ namespace osu.Game.Overlays.Toolbar
 {
     public class ToolbarButton : Container
     {
+        public const float WIDTH = Toolbar.HEIGHT * 1.4f;
+
         public FontAwesome Icon
         {
             get { return DrawableIcon.Icon; }
@@ -53,6 +56,8 @@ namespace osu.Game.Overlays.Toolbar
             }
         }
 
+        protected virtual Anchor TooltipAnchor => Anchor.TopLeft;
+
         public Action Action;
         protected TextAwesome DrawableIcon;
         protected SpriteText DrawableText;
@@ -61,25 +66,28 @@ namespace osu.Game.Overlays.Toolbar
         private SpriteText tooltip1;
         private SpriteText tooltip2;
         protected FlowContainer Flow;
-        private AudioSample sampleClick;
+        private SampleChannel sampleClick;
 
         public ToolbarButton()
         {
+            Width = WIDTH;
+            RelativeSizeAxes = Axes.Y;
+
             Children = new Drawable[]
             {
                 HoverBackground = new Box
                 {
                     RelativeSizeAxes = Axes.Both,
-                    Colour = new Color4(80, 80, 80, 180),
+                    Colour = OsuColour.Gray(80).Opacity(180),
                     BlendingMode = BlendingMode.Additive,
                     Alpha = 0,
                 },
                 Flow = new FlowContainer
                 {
-                    Direction = FlowDirection.HorizontalOnly,
+                    Direction = FlowDirections.Horizontal,
                     Anchor = Anchor.TopCentre,
                     Origin = Anchor.TopCentre,
-                    Padding = new MarginPadding { Left = 15, Right = 15 },
+                    Padding = new MarginPadding { Left = Toolbar.HEIGHT / 2, Right = Toolbar.HEIGHT / 2 },
                     Spacing = new Vector2(5),
                     RelativeSizeAxes = Axes.Y,
                     AutoSizeAxes = Axes.X,
@@ -90,7 +98,7 @@ namespace osu.Game.Overlays.Toolbar
                             Anchor = Anchor.CentreLeft,
                             Origin = Anchor.CentreLeft,
                         },
-                        DrawableText = new SpriteText
+                        DrawableText = new OsuSpriteText
                         {
                             Anchor = Anchor.CentreLeft,
                             Origin = Anchor.CentreLeft,
@@ -99,29 +107,32 @@ namespace osu.Game.Overlays.Toolbar
                 },
                 tooltipContainer = new FlowContainer
                 {
-                    Direction = FlowDirection.VerticalOnly,
-                    AutoSizeAxes = Axes.Both,
-                    Anchor = Anchor.BottomLeft,
-                    Position = new Vector2(5, 5),
+                    Direction = FlowDirections.Vertical,
+                    RelativeSizeAxes = Axes.Both, //stops us being considered in parent's autosize
+                    Anchor = (TooltipAnchor & Anchor.x0) > 0 ? Anchor.BottomLeft : Anchor.BottomRight,
+                    Origin = TooltipAnchor,
+                    Position = new Vector2((TooltipAnchor & Anchor.x0) > 0 ? 5 : -5, 5),
                     Alpha = 0,
                     Children = new[]
                     {
-                        tooltip1 = new SpriteText
+                        tooltip1 = new OsuSpriteText
                         {
+                            Anchor = TooltipAnchor,
+                            Origin = TooltipAnchor,
                             Shadow = true,
                             TextSize = 22,
                             Font = @"Exo2.0-Bold",
                         },
-                        tooltip2 = new SpriteText
+                        tooltip2 = new OsuSpriteText
                         {
+                            Anchor = TooltipAnchor,
+                            Origin = TooltipAnchor,
                             Shadow = true,
                             TextSize = 16
                         }
                     }
                 }
             };
-
-            RelativeSizeAxes = Axes.Y;
         }
 
         [BackgroundDependencyLoader]
@@ -130,21 +141,13 @@ namespace osu.Game.Overlays.Toolbar
             sampleClick = audio.Sample.Get(@"Menu/menuclick");
         }
 
-        protected override void Update()
-        {
-            base.Update();
-
-            //todo: find a way to avoid using this (autosize needs to be able to ignore certain drawables.. in this case the tooltip)
-            Size = new Vector2(Flow.DrawSize.X, 1);
-        }
-
         protected override bool OnMouseDown(InputState state, MouseDownEventArgs args) => true;
 
         protected override bool OnClick(InputState state)
         {
             Action?.Invoke();
             sampleClick.Play();
-            HoverBackground.FlashColour(new Color4(255, 255, 255, 100), 500, EasingTypes.OutQuint);
+            HoverBackground.FlashColour(Color4.White.Opacity(100), 500, EasingTypes.OutQuint);
             return true;
         }
 
@@ -168,18 +171,26 @@ namespace osu.Game.Overlays.Toolbar
         {
             RelativeSizeAxes = Axes.Both;
             Masking = true;
+            MaskingSmoothness = 0;
+            EdgeEffect = new EdgeEffect
+            {
+                Type = EdgeEffectType.Shadow,
+                Colour = Color4.Black.Opacity(40),
+                Radius = 5,
+            };
 
             Children = new Drawable[]
             {
                 new Box
                 {
                     RelativeSizeAxes = Axes.Both,
-                    Colour = new Color4(30, 30, 30, 255)
+                    Colour = OsuColour.Gray(30)
                 },
                 new Triangles
                 {
                     RelativeSizeAxes = Axes.Both,
-                    Alpha = 0.05f,
+                    ColourLight = OsuColour.Gray(40),
+                    ColourDark = OsuColour.Gray(20),
                 },
             };
         }
